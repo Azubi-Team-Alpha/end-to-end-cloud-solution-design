@@ -44,3 +44,5 @@ output "rds_secret_arn" {
   value = module.rds.rds_secret_arn
   description = "The ARN of the RDS secret in Secrets Manager"
 }
+
+# Outputs created
