@@ -1,15 +1,11 @@
 terraform {
-  required_version = ">= 1.3"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.5"
+      version = "~> 6.0"
     }
   }
+
 }
 
 provider "aws" {
@@ -20,7 +16,7 @@ provider "aws" {
 # VPC MODULE
 # ------------------------------------------------------------------------------
 module "vpc" {
-  source = "../modules/vpc"
+  source = "./modules/vpc"
 
   vpc_cidr             = var.vpc_cidr
   public_subnet_cidrs  = var.public_subnet_cidrs
@@ -185,7 +181,7 @@ resource "aws_iam_instance_profile" "ec2_profile" {
 # RDS MODULE
 # ------------------------------------------------------------------------------
 module "rds" {
-  source = "../modules/rds"
+  source = "./modules/rds"
 
   vpc_id              = module.vpc.vpc_id
   private_subnet_ids  = module.vpc.private_subnet_ids

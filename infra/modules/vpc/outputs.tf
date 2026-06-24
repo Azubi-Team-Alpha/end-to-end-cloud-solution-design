@@ -3,6 +3,11 @@ output "vpc_id" {
   value       = aws_vpc.main.id
 }
 
+# Or if you want the list of all NAT gateway IDs (recommended)
+output "nat_gateway_ids" {
+  value = aws_nat_gateway.this[*].id
+}
+
 output "public_subnet_ids" {
   description = "The IDs of the public subnets"
   value       = aws_subnet.public.*.id
