@@ -1,87 +1,67 @@
+# Generate random password if not provided
+resource "random_password" "db_password" {
+  count = var.db_password == null ? 1 : 0
+  length  = 16
+  special = false
+}
+
+locals {
+  db_password = var.db_password != null ? var.db_password : random_password.db_password[0].result
+}
+
+# DB Subnet Group
 resource "aws_db_subnet_group" "this" {
-  name       = "${var.environment}-rds-subnet-group"
-  subnet_ids = var.subnet_ids
+  name       = "${var.environment}-db-subnet-group"
+  subnet_ids = var.private_subnet_ids
 
   tags = {
-    Name        = "${var.environment}-rds-subnet-group"
-    Environment = var.environment
-  }
-}
-
-# RDS Security Group
-resource "aws_security_group" "rds" {
-  name        = "${var.environment}-rds-sg"
-  description = "Security group for RDS instance in ${var.environment}"
-  vpc_id      = var.vpc_id
-
-  ingress {
-    description = "DB port access from allowed CIDRs"
-    from_port   = var.db_port
-    to_port     = var.db_port
-    protocol    = "tcp"
-    cidr_blocks = var.allowed_cidr_blocks
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name        = "${var.environment}-rds-sg"
-    Environment = var.environment
-  }
-}
-
-# RDS Parameter Group
-resource "aws_db_parameter_group" "this" {
-  name   = "${var.environment}-${var.db_engine}-params"
-  family = var.db_parameter_group_family
-
-  tags = {
-    Name        = "${var.environment}-${var.db_engine}-params"
+    Name        = "${var.environment}-db-subnet-group"
     Environment = var.environment
   }
 }
 
 # RDS Instance
 resource "aws_db_instance" "this" {
-  identifier = "${var.environment}-${var.db_name}"
-
-  engine         = var.db_engine
-  engine_version = var.db_engine_version
+  identifier     = "${var.environment}-postgres"
+  engine         = "postgres"
+  engine_version = var.engine_version
   instance_class = var.db_instance_class
-
-  allocated_storage     = var.allocated_storage
-  max_allocated_storage = var.max_allocated_storage
-  storage_type          = var.storage_type
-  storage_encrypted     = var.storage_encrypted
+  allocated_storage = var.allocated_storage
+  storage_encrypted = true
 
   db_name  = var.db_name
   username = var.db_username
-  password = var.db_password
-  port     = var.db_port
+  password = local.db_password
 
   db_subnet_group_name   = aws_db_subnet_group.this.name
-  vpc_security_group_ids = [aws_security_group.rds.id]
-  parameter_group_name   = aws_db_parameter_group.this.name
+  vpc_security_group_ids = var.security_group_ids
 
-  multi_az               = var.multi_az
-  publicly_accessible    = false
-  deletion_protection    = var.deletion_protection
-  skip_final_snapshot    = var.skip_final_snapshot
-  final_snapshot_identifier = var.skip_final_snapshot ? null : "${var.environment}-${var.db_name}-final-snapshot"
-
-  backup_retention_period = var.backup_retention_period
-  backup_window           = var.backup_window
-  maintenance_window      = var.maintenance_window
-
-  apply_immediately = var.apply_immediately
+  skip_final_snapshot = true  # Set to false in production
+  publicly_accessible = false
 
   tags = {
-    Name        = "${var.environment}-${var.db_name}"
+    Name        = "${var.environment}-rds"
     Environment = var.environment
   }
+}
+
+# Store credentials in Secrets Manager
+resource "aws_secretsmanager_secret" "db_creds" {
+  name = "${var.environment}-db-credentials"
+
+  tags = {
+    Environment = var.environment
+  }
+}
+
+resource "aws_secretsmanager_secret_version" "db_creds" {
+  secret_id = aws_secretsmanager_secret.db_creds.id
+  secret_string = jsonencode({
+    dbname     = var.db_name
+    username   = var.db_username
+    password   = local.db_password
+    host       = aws_db_instance.this.address
+    port       = aws_db_instance.this.port
+    engine     = "postgres"
+  })
 }

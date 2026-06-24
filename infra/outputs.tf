@@ -1,48 +1,35 @@
 output "vpc_id" {
   value = module.vpc.vpc_id
-  description = "The ID of the VPC"
 }
 
-
-output "public_subnet_id" {
+output "public_subnet_ids" {
   value = module.vpc.public_subnet_ids
-  description = "The ID of the public subnets"
 }
 
-
-output "private_subnet_id" {
+output "private_subnet_ids" {
   value = module.vpc.private_subnet_ids
-  description = "The ID of the private subnets"
 }
-
 
 output "alb_security_group_id" {
-  value = module.alb.alb_security_group_id
-  description = "The ID of the ALB security group"
+  value = aws_security_group.alb.id
 }
 
+output "ec2_security_group_id" {
+  value = aws_security_group.ec2.id
+}
 
 output "rds_security_group_id" {
-  value = module.rds.rds_security_group_id
-  description = "The ID of the RDS security group"
+  value = aws_security_group.rds.id
 }
-
 
 output "ec2_instance_profile_name" {
-  value = module.ec2.instance_profile_name
-  description = "The name of the EC2 instance profile"
+  value = aws_iam_instance_profile.ec2_profile.name
 }
-
 
 output "rds_endpoint" {
-  value = module.rds.rds_endpoint
-  description = "The endpoint of the RDS instance"
+  value = module.rds.db_endpoint
 }
-
 
 output "rds_secret_arn" {
-  value = module.rds.rds_secret_arn
-  description = "The ARN of the RDS secret in Secrets Manager"
+  value = module.rds.db_secret_arn
 }
-
-# Outputs created
