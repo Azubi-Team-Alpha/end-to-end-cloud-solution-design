@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  # Local PostgreSQL database (matches Amazon RDS for PostgreSQL)
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: myappdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Your FastAPI application
+  app:
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      DB_HOST: db                      # 'db' is the service name above
+      DB_USER: postgres
+      DB_PASSWORD: password
+      DB_NAME: myappdb
+      DB_PORT: 5432
+    depends_on:
+      db:
+        condition: service_healthy
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  postgres_data:
