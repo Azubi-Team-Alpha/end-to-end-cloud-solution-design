@@ -28,16 +28,13 @@ resource "aws_iam_instance_profile" "ec2_profile" {
 # RDS MODULE
 # ------------------------------------------------------------------------------
 module "rds" {
-  source = "../modules/rds"
+  source = "./modules/rds"
 
-  vpc_id              = module.vpc.vpc_id
-  private_subnet_ids  = module.vpc.private_subnet_ids
-  security_group_ids  = [aws_security_group.rds.id]
-  db_name             = var.db_name
-  db_username         = var.db_username
-  db_password         = var.db_password # optional – module will generate if null
-  db_instance_class   = var.db_instance_class
-  allocated_storage   = var.allocated_storage
-  engine_version      = var.engine_version
-  environment         = var.environment
+  vpc_id             = module.vpc.vpc_id
+  subnet_ids         = module.vpc.private_subnet_ids
+  db_name            = var.db_name
+  db_username        = var.db_username
+  db_password        = var.db_password # optional – module will generate if null
+  db_instance_class  = var.db_instance_class
+  environment        = var.environment
 }
