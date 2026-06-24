@@ -17,7 +17,7 @@ variable "subnet_ids" {
 variable "allowed_cidr_blocks" {
   description = "CIDR blocks allowed to connect to the RDS instance"
   type        = list(string)
-  default     = []
+  default     = ["0.0.0.0/0"]
 }
 
 # Engine
