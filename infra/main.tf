@@ -172,9 +172,62 @@ resource "aws_iam_role_policy_attachment" "ec2_attach" {
   policy_arn = aws_iam_policy.ec2_policy.arn
 }
 
+resource "aws_iam_role_policy_attachment" "ec2_ecs_managed" {
+  role       = aws_iam_role.ec2_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+}
+
 resource "aws_iam_instance_profile" "ec2_profile" {
   name = "${var.environment}-ec2-instance-profile"
   role = aws_iam_role.ec2_role.name
+}
+
+data "aws_ssm_parameter" "ecs_optimized_ami" {
+  name = "/aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id"
+}
+
+resource "aws_launch_template" "ecs" {
+  name_prefix   = "${var.environment}-ecs-"
+  image_id      = data.aws_ssm_parameter.ecs_optimized_ami.value
+  instance_type = var.ecs_instance_type
+
+  iam_instance_profile {
+    name = aws_iam_instance_profile.ec2_profile.name
+  }
+
+  vpc_security_group_ids = [aws_security_group.ec2.id]
+
+  user_data = base64encode(<<-EOF
+    #!/bin/bash
+    echo ECS_CLUSTER=${aws_ecs_cluster.app.name} >> /etc/ecs/ecs.config
+    echo ECS_ENABLE_CONTAINER_METADATA=true >> /etc/ecs/ecs.config
+  EOF
+  )
+
+  monitoring {
+    enabled = true
+  }
+}
+
+resource "aws_autoscaling_group" "ecs" {
+  name                      = "${var.environment}-ecs-asg"
+  vpc_zone_identifier       = module.vpc.private_subnet_ids
+  min_size                  = var.ecs_min_size
+  max_size                  = var.ecs_max_size
+  desired_capacity          = var.ecs_desired_capacity
+  health_check_type         = "EC2"
+  health_check_grace_period = 300
+
+  launch_template {
+    id      = aws_launch_template.ecs.id
+    version = "$Latest"
+  }
+
+  tag {
+    key                 = "Name"
+    value               = "${var.environment}-ecs-node"
+    propagate_at_launch = true
+  }
 }
 
 # ------------------------------------------------------------------------------

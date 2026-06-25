@@ -168,7 +168,7 @@ resource "aws_lb_listener" "http" {
 
 resource "aws_ecs_task_definition" "app" {
   family                   = "${var.environment}-app"
-  requires_compatibilities = ["FARGATE"]
+  requires_compatibilities = ["EC2"]
   network_mode             = "awsvpc"
   cpu                      = "512"
   memory                   = "1024"
@@ -182,8 +182,8 @@ resource "aws_ecs_task_definition" "app" {
       essential = true
       portMappings = [
         {
-          containerPort = 8000
-          hostPort      = 8000
+          containerPort = var.app_port
+          hostPort      = var.app_port
           protocol      = "tcp"
         }
       ]
@@ -216,8 +216,7 @@ resource "aws_ecs_service" "app" {
   cluster         = aws_ecs_cluster.app.id
   task_definition = aws_ecs_task_definition.app.arn
   desired_count   = 2
-  launch_type     = "FARGATE"
-  platform_version = "LATEST"
+  launch_type     = "EC2"
 
   network_configuration {
     subnets          = module.vpc.private_subnet_ids
@@ -228,8 +227,8 @@ resource "aws_ecs_service" "app" {
   load_balancer {
     target_group_arn = aws_lb_target_group.app.arn
     container_name   = "app"
-    container_port   = 8000
+    container_port   = var.app_port
   }
 
-  depends_on = [aws_lb_listener.http]
+  depends_on = [aws_lb_listener.http, aws_autoscaling_group.ecs]
 }

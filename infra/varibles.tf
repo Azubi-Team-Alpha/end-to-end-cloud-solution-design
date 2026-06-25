@@ -37,7 +37,31 @@ variable "azs" {
 variable "app_port" {
   description = "Port on which the application listens"
   type        = number
-  default     = 8080
+  default     = 8000
+}
+
+variable "ecs_instance_type" {
+  description = "EC2 instance type for ECS capacity"
+  type        = string
+  default     = "t3.small"
+}
+
+variable "ecs_desired_capacity" {
+  description = "Desired number of ECS container instances"
+  type        = number
+  default     = 2
+}
+
+variable "ecs_min_size" {
+  description = "Minimum number of ECS container instances"
+  type        = number
+  default     = 2
+}
+
+variable "ecs_max_size" {
+  description = "Maximum number of ECS container instances"
+  type        = number
+  default     = 4
 }
 
 # RDS variables

@@ -26,6 +26,14 @@ output "ec2_instance_profile_name" {
   value = aws_iam_instance_profile.ec2_profile.name
 }
 
+output "ecs_autoscaling_group_name" {
+  value = aws_autoscaling_group.ecs.name
+}
+
+output "ecs_launch_template_name" {
+  value = aws_launch_template.ecs.name
+}
+
 output "rds_endpoint" {
   value = module.rds.db_endpoint
 }
