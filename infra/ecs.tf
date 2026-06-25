@@ -108,6 +108,23 @@ resource "aws_iam_role_policy_attachment" "app_task_policy_attach" {
   policy_arn = aws_iam_policy.app_task_policy.arn
 }
 
+data "aws_iam_policy_document" "ecs_execution_secrets_policy_doc" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "secretsmanager:GetSecretValue",
+      "secretsmanager:DescribeSecret"
+    ]
+    resources = [module.rds.db_secret_arn]
+  }
+}
+
+resource "aws_iam_role_policy" "ecs_execution_secrets" {
+  name   = "${var.environment}-ecs-execution-secrets"
+  role   = aws_iam_role.ecs_task_execution_role.id
+  policy = data.aws_iam_policy_document.ecs_execution_secrets_policy_doc.json
+}
+
 resource "aws_ecs_cluster" "app" {
   name = "${var.environment}-cluster"
 }
@@ -174,8 +191,13 @@ resource "aws_ecs_task_definition" "app" {
         { name = "DB_HOST", value = module.rds.db_address },
         { name = "DB_PORT", value = tostring(module.rds.db_port) },
         { name = "DB_NAME", value = var.db_name },
-        { name = "DB_USER", value = var.db_username },
-        { name = "DB_PASSWORD", value = var.db_password != null ? var.db_password : "" }
+        { name = "DB_USER", value = var.db_username }
+      ]
+      secrets = [
+        {
+          name      = "DB_PASSWORD"
+          valueFrom = module.rds.db_secret_arn
+        }
       ]
       logConfiguration = {
         logDriver = "awslogs"
