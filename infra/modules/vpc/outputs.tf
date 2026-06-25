@@ -1,11 +1,11 @@
 output "vpc_id" {
   description = "The ID of the VPC"
-  value       = aws_vpc.main.id
+  value       = aws_vpc.this.id
 }
 
-# Or if you want the list of all NAT gateway IDs (recommended)
 output "nat_gateway_ids" {
-  value = aws_nat_gateway.this[*].id
+  description = "The IDs of all NAT gateways"
+  value       = aws_nat_gateway.this[*].id
 }
 
 output "public_subnet_ids" {
@@ -20,5 +20,5 @@ output "private_subnet_ids" {
 
 output "nat_gateway_id" {
   description = "The ID of the NAT gateway"
-  value       = aws_nat_gateway.main.id
+  value       = length(aws_nat_gateway.this) > 0 ? aws_nat_gateway.this[0].id : null
 }
