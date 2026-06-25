@@ -9,7 +9,7 @@ azs = ["us-east-1a", "us-east-1b"]
 app_port = 8080
 
 db_name           = "myappdb"
-db_username       = "admin"
+db_username       = "appadmin"
 # db_password     = "YourStrongPassword"  # optional; leave commented to generate random
 db_instance_class = "db.t3.micro"
 allocated_storage = 20

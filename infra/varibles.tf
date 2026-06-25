@@ -50,7 +50,7 @@ variable "db_name" {
 variable "db_username" {
   description = "Master username for RDS"
   type        = string
-  default     = "admin"
+  default     = "appadmin"
 }
 
 variable "db_password" {
