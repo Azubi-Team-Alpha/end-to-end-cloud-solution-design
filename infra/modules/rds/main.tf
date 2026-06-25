@@ -47,7 +47,7 @@ resource "aws_db_instance" "this" {
 
 # Store credentials in Secrets Manager
 resource "aws_secretsmanager_secret" "db_creds" {
-  name = "${var.environment}-db-credentials"
+  name_prefix = "${var.environment}-db-credentials-"
 
   tags = {
     Environment = var.environment
