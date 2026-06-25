@@ -13,4 +13,4 @@ db_username       = "admin"
 # db_password     = "YourStrongPassword"  # optional; leave commented to generate random
 db_instance_class = "db.t3.micro"
 allocated_storage = 20
-engine_version    = "14.6"
+engine_version    = "14.23"
