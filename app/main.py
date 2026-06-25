@@ -4,7 +4,7 @@ from fastapi import FastAPI, HTTPException
 import logging
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(_name_)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="My Cloud App", version="1.0.0")
 
@@ -15,7 +15,7 @@ def get_db_connection():
             database=os.getenv("DB_NAME", "myappdb"),
             user=os.getenv("DB_USER", "postgres"),
             password=os.getenv("DB_PASSWORD", "password"),
-            port=os.getenv("DB_PORT", 5432)
+            port=int(os.getenv("DB_PORT", 5432))
         )
         return conn
     except Exception as e:

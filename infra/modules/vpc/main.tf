@@ -98,14 +98,9 @@ resource "aws_nat_gateway" "this" {
 
 # Private Route Table(s)
 resource "aws_route_table" "private" {
-  count = var.enable_nat_gateway ? (var.single_nat_gateway ? 1 : length(var.private_subnet_cidrs)) : 0
+  count = var.enable_nat_gateway ? (var.single_nat_gateway ? 1 : length(var.private_subnet_cidrs)) : 1
 
   vpc_id = aws_vpc.this.id
-
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = var.single_nat_gateway ? aws_nat_gateway.this[0].id : aws_nat_gateway.this[count.index].id
-  }
 
   tags = {
     Name        = "${var.environment}-private-rt-${count.index + 1}"
@@ -113,10 +108,18 @@ resource "aws_route_table" "private" {
   }
 }
 
+resource "aws_route" "private_default" {
+  count = var.enable_nat_gateway ? (var.single_nat_gateway ? 1 : length(var.private_subnet_cidrs)) : 0
+
+  route_table_id         = aws_route_table.private[count.index].id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = var.single_nat_gateway ? aws_nat_gateway.this[0].id : aws_nat_gateway.this[count.index].id
+}
+
 # Private Route Table Associations
 resource "aws_route_table_association" "private" {
   count = length(var.private_subnet_cidrs)
 
   subnet_id      = aws_subnet.private[count.index].id
-  route_table_id = var.single_nat_gateway ? aws_route_table.private[0].id : aws_route_table.private[count.index].id
+  route_table_id = var.enable_nat_gateway ? (var.single_nat_gateway ? aws_route_table.private[0].id : aws_route_table.private[count.index].id) : aws_route_table.private[0].id
 }
