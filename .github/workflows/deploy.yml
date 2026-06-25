@@ -61,28 +61,9 @@ jobs:
         with:
           terraform_version: 1.15.6
 
-      - name: Bootstrap Terraform backend
-        working-directory: infra/bootstrap
-        run: |
-          terraform init
-          terraform apply -auto-approve
-
-      - name: Read backend values
-        id: bootstrap
-        working-directory: infra/bootstrap
-        run: |
-          echo "bucket=$(terraform output -raw state_bucket_name)" >> "$GITHUB_OUTPUT"
-          echo "table=$(terraform output -raw lock_table_name)" >> "$GITHUB_OUTPUT"
-
       - name: Initialize main Terraform
         working-directory: infra
-        run: |
-          terraform init -reconfigure -migrate-state \
-            -backend-config="bucket=${{ steps.bootstrap.outputs.bucket }}" \
-            -backend-config="key=infra/terraform.tfstate" \
-            -backend-config="region=${{ env.AWS_REGION }}" \
-            -backend-config="dynamodb_table=${{ steps.bootstrap.outputs.table }}" \
-            -backend-config="encrypt=true"
+        run: terraform init -reconfigure
 
       - name: Terraform fmt
         working-directory: infra
